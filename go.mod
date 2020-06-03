@@ -6,6 +6,6 @@ require (
 	github.com/tidwall/gjson v1.6.0
 )
 
-replace github.com/nukosuke/go-zendesk => github.com/tylerconlee/go-zendesk v0.7.4
+replace github.com/nukosuke/go-zendesk => github.com/tylerconlee/go-zendesk v0.7.2
 
 go 1.13

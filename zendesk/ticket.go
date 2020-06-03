@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nukosuke/go-zendesk/zendesk/sideload"
+	"github.com/tylerconlee/go-zendesk/zendesk/sideload"
 )
 
 type CustomField struct {
