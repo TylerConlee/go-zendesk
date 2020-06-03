@@ -164,10 +164,11 @@ func (z *Client) GetTickets(ctx context.Context, opts *TicketListOptions) ([]Tic
 // GetTickets get ticket list
 //
 // ref: https://developer.zendesk.com/rest_api/docs/support/tickets#list-tickets
-func (z *Client) GetIncrementalTickets(ctx context.Context, opts *TicketListOptions) ([]Ticket, Page, error) {
+func (z *Client) GetIncrementalTickets(ctx context.Context, opts *TicketListOptions) ([]Ticket, string, bool, error) {
 	var data struct {
 		Tickets []Ticket `json:"tickets"`
-		Page
+		URL     string   `json:"after_url"`
+		EoS     bool     `json:"end_of_stream"`
 	}
 
 	tmp := opts
@@ -177,19 +178,19 @@ func (z *Client) GetIncrementalTickets(ctx context.Context, opts *TicketListOpti
 
 	u, err := addOptions("/incremental/tickets.json", tmp)
 	if err != nil {
-		return nil, Page{}, err
+		return nil, "", "", err
 	}
 
 	body, err := z.get(ctx, u)
 	if err != nil {
-		return nil, Page{}, err
+		return nil, data.URL, data.EoS, err
 	}
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, Page{}, err
+		return nil, data.URL, data.EoS, err
 	}
-	return data.Tickets, data.Page, nil
+	return data.Tickets, data.URL, data.EoS, nil
 }
 
 // GetTicket gets a specified ticket
