@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/nukosuke/go-zendesk/zendesk/sideload"
 )
 
 type CustomField struct {
@@ -73,14 +75,7 @@ type Ticket struct {
 	Tags            []string      `json:"tags,omitempty"`
 	CustomFields    []CustomField `json:"custom_fields,omitempty"`
 
-	Via struct {
-		Channel string `json:"channel"`
-		Source  struct {
-			From map[string]interface{} `json:"from"`
-			To   map[string]interface{} `json:"to"`
-			Rel  string                 `json:"rel"`
-		} `json:"source"`
-	} `json:"via"`
+	// TODO: Via          #123
 
 	SatisfactionRating struct {
 		ID      int64  `json:"id"`
@@ -118,15 +113,21 @@ type TicketListOptions struct {
 
 	// SortOrder can take "asc" or "desc"
 	SortOrder string `url:"sort_order,omitempty"`
+
+	// StartTime is a UNIX timestamp of when an incremental export should begin
+	StartTime string `url:"start_time,omitempty"`
+
+	// Cursor determines "page" in an incremental export
+	// https://developer.zendesk.com/rest_api/docs/support/incremental_export#cursor-based-incremental-exports
+	Cursor string `url:"cursor,omitempty"`
 }
 
 // TicketAPI an interface containing all ticket related methods
 type TicketAPI interface {
 	GetTickets(ctx context.Context, opts *TicketListOptions) ([]Ticket, Page, error)
-	GetTicket(ctx context.Context, id int64) (Ticket, error)
+	GetTicket(ctx context.Context, id int64, sideload ...sideload.SideLoader) (Ticket, error)
 	GetMultipleTickets(ctx context.Context, ticketIDs []int64) ([]Ticket, error)
 	CreateTicket(ctx context.Context, ticket Ticket) (Ticket, error)
-	UpdateTicket(ctx context.Context, ticketID int64, ticket Ticket) (Ticket, error)
 }
 
 // GetTickets get ticket list
@@ -160,15 +161,57 @@ func (z *Client) GetTickets(ctx context.Context, opts *TicketListOptions) ([]Tic
 	return data.Tickets, data.Page, nil
 }
 
+// GetTickets get ticket list
+//
+// ref: https://developer.zendesk.com/rest_api/docs/support/tickets#list-tickets
+func (z *Client) GetIncrementalTickets(ctx context.Context, opts *TicketListOptions) ([]Ticket, Page, error) {
+	var data struct {
+		Tickets []Ticket `json:"tickets"`
+		Page
+	}
+
+	tmp := opts
+	if tmp == nil {
+		tmp = &TicketListOptions{}
+	}
+
+	u, err := addOptions("/incremental/tickets.json", tmp)
+	if err != nil {
+		return nil, Page{}, err
+	}
+
+	body, err := z.get(ctx, u)
+	if err != nil {
+		return nil, Page{}, err
+	}
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, Page{}, err
+	}
+	return data.Tickets, data.Page, nil
+}
+
 // GetTicket gets a specified ticket
 //
 // ref: https://developer.zendesk.com/rest_api/docs/support/tickets#show-ticket
-func (z *Client) GetTicket(ctx context.Context, ticketID int64) (Ticket, error) {
+func (z *Client) GetTicket(ctx context.Context, ticketID int64, sideLoad ...sideload.SideLoader) (Ticket, error) {
 	var result struct {
 		Ticket Ticket `json:"ticket"`
 	}
 
-	body, err := z.get(ctx, fmt.Sprintf("/tickets/%d.json", ticketID))
+	var builder includeBuilder
+
+	for _, v := range sideLoad {
+		builder.addKey(v.Key())
+	}
+
+	u, err := builder.path(fmt.Sprintf("/tickets/%d.json", ticketID))
+	if err != nil {
+		return Ticket{}, err
+	}
+
+	body, err := z.get(ctx, u)
 	if err != nil {
 		return Ticket{}, err
 	}
@@ -178,7 +221,14 @@ func (z *Client) GetTicket(ctx context.Context, ticketID int64) (Ticket, error) 
 		return Ticket{}, err
 	}
 
-	return result.Ticket, err
+	for _, sideLoader := range sideLoad {
+		err = sideLoader.Unmarshal(body)
+		if err != nil {
+			return Ticket{}, err
+		}
+	}
+
+	return result.Ticket, nil
 }
 
 // GetMultipleTickets gets multiple specified tickets
@@ -225,26 +275,6 @@ func (z *Client) CreateTicket(ctx context.Context, ticket Ticket) (Ticket, error
 	data.Ticket = ticket
 
 	body, err := z.post(ctx, "/tickets.json", data)
-	if err != nil {
-		return Ticket{}, err
-	}
-
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return Ticket{}, err
-	}
-	return result.Ticket, nil
-}
-
-// UpdateTicket update an existing ticket
-// ref: https://developer.zendesk.com/rest_api/docs/support/tickets#update-ticket
-func (z *Client) UpdateTicket(ctx context.Context, ticketID int64, ticket Ticket) (Ticket, error) {
-	var data, result struct {
-		Ticket Ticket `json:"ticket"`
-	}
-	data.Ticket = ticket
-
-	body, err := z.put(ctx, fmt.Sprintf("/tickets/%d.json", ticketID), data)
 	if err != nil {
 		return Ticket{}, err
 	}

@@ -3,9 +3,10 @@ package zendesk
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/nukosuke/go-zendesk/zendesk/sideload"
 	"net/http"
-	"reflect"
+	"net/http/httptest"
+	"path/filepath"
 	"sort"
 	"testing"
 )
@@ -47,36 +48,6 @@ func TestGetTicket(t *testing.T) {
 	if ticket.ID != expectedID {
 		t.Fatalf("Returned ticket does not have the expected ID %d. Ticket id is %d", expectedID, ticket.ID)
 	}
-
-	expectedVia := struct {
-		Channel string `json:"channel"`
-		Source  struct {
-			From map[string]interface{} `json:"from"`
-			To   map[string]interface{} `json:"to"`
-			Rel  string                 `json:"rel"`
-		} `json:"source"`
-	}{
-		Channel: "email",
-		Source: struct {
-			From map[string]interface{} `json:"from"`
-			To   map[string]interface{} `json:"to"`
-			Rel  string                 `json:"rel"`
-		}{
-			From: map[string]interface{}{
-				"address": "nukosuke@lavabit.com",
-				"name":    "Yosuke Tamura",
-			},
-			To: map[string]interface{}{
-				"name":    "Terraform Zendesk provider",
-				"address": "support@d3v-terraform-provider.zendesk.com",
-			},
-			Rel: "",
-		},
-	}
-
-	if !reflect.DeepEqual(ticket.Via, expectedVia) {
-		t.Fatal(fmt.Sprintf("Expected ticket via object to be %v but got %v", expectedVia, ticket.Via))
-	}
 }
 
 func TestGetTicketCanceledContext(t *testing.T) {
@@ -88,6 +59,75 @@ func TestGetTicketCanceledContext(t *testing.T) {
 	_, err := client.GetTicket(canceled, 2)
 	if err == nil {
 		t.Fatal("Did not get error when calling with cancelled context")
+	}
+}
+
+func TestGetTicketSideloaded(t *testing.T) {
+	mockAPI := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		expectedQuery := `users,groups,dates`
+		actual := q.Get("include")
+		if actual != expectedQuery {
+			t.Fatalf(`Actual query did not match expected. Was "%s" expected "%s"`, actual, expectedQuery)
+		}
+		w.Write(readFixture(filepath.Join(http.MethodGet, "ticket_sideload.json")))
+	}))
+	client := newTestClient(mockAPI)
+	defer mockAPI.Close()
+
+	var users []User
+	var groups []Group
+	var ticketDates sideload.TicketDates
+	ticket, err := client.GetTicket(
+		ctx,
+		4,
+		sideload.IncludeObject("users", &users),
+		sideload.IncludeObject("groups", &groups),
+		sideload.IncludeTicketDates(&ticketDates),
+	)
+
+	if err != nil {
+		t.Fatalf("Failed to get ticket: %s", err)
+	}
+
+	expectedID := int64(4)
+	if ticket.ID != expectedID {
+		t.Fatalf("Returned ticket does not have the expected ID %d. Ticket id is %d", expectedID, ticket.ID)
+	}
+
+	if len(users) != 1 {
+		t.Fatalf("Did not have the expected number of users")
+	}
+
+	userID := int64(377922500012)
+	if users[0].ID != userID {
+		t.Fatalf("User did not have the expected userID %d. User was: %v", userID, users[0])
+	}
+
+	if len(groups) != 1 {
+		t.Fatalf("Did not have the expected number of groups")
+	}
+
+	groupID := int64(360004077472)
+	if groups[0].ID != groupID {
+		t.Fatalf("Group did not have expected group id %d", groupID)
+	}
+
+	if ticketDates.RequesterUpdatedAt.Year() != 2019 && ticketDates.RequesterUpdatedAt.Month() != 6 {
+		t.Fatalf("Ticket dates did not have expected value. Was %v", ticketDates)
+	}
+}
+
+func TestTicketSideloadReturnsErrorIfNotPassedPointer(t *testing.T) {
+	mockAPI := newMockAPI(http.MethodGet, "ticket_sideload.json")
+	client := newTestClient(mockAPI)
+	defer mockAPI.Close()
+
+	var users []User
+	_, err := client.GetTicket(ctx, 4, sideload.IncludeObject("users", users))
+
+	if err == nil {
+		t.Fatalf("Did not recieve error from error when passing list by copy")
 	}
 }
 
@@ -193,32 +233,5 @@ func TestCreateTicket(t *testing.T) {
 	expectedID := int64(4)
 	if ticket.ID != expectedID {
 		t.Fatalf("Returned ticket does not have the expected ID %d. Ticket id is %d", expectedID, ticket.ID)
-	}
-}
-
-func TestUpdateTicket(t *testing.T) {
-	mockAPI := newMockAPIWithStatus(http.MethodPut, "ticket.json", http.StatusOK)
-	client := newTestClient(mockAPI)
-	defer mockAPI.Close()
-
-	ticket, err := client.UpdateTicket(ctx, 2, Ticket{})
-	if err != nil {
-		t.Fatalf("Failed to update ticket: %s", err)
-	}
-
-	expectedID := int64(2)
-	if ticket.ID != expectedID {
-		t.Fatalf("Returned ticket does not have the expected ID %d. Ticket id is %d", expectedID, ticket.ID)
-	}
-}
-
-func TestUpdateTicketFailure(t *testing.T) {
-	mockAPI := newMockAPIWithStatus(http.MethodPut, "ticket.json", http.StatusInternalServerError)
-	client := newTestClient(mockAPI)
-	defer mockAPI.Close()
-
-	_, err := client.UpdateTicket(ctx, 2, Ticket{})
-	if err == nil {
-		t.Fatal("Client did not return error when api failed")
 	}
 }
