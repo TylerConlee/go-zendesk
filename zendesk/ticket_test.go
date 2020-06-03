@@ -3,12 +3,13 @@ package zendesk
 import (
 	"context"
 	"encoding/json"
-	"github.com/nukosuke/go-zendesk/zendesk/sideload"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"sort"
 	"testing"
+
+	"github.com/tylerconlee/zendesk-go/zendesk/sideload"
 )
 
 func TestGetTickets(t *testing.T) {
