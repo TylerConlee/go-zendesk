@@ -178,17 +178,17 @@ func (z *Client) GetIncrementalTickets(ctx context.Context, opts *TicketListOpti
 
 	u, err := addOptions("/incremental/tickets.json", tmp)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", true, err
 	}
 
 	body, err := z.get(ctx, u)
 	if err != nil {
-		return nil, data.URL, data.EoS, err
+		return nil, "", true, err
 	}
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, data.URL, data.EoS, err
+		return nil, "", true, err
 	}
 	return data.Tickets, data.URL, data.EoS, nil
 }
