@@ -100,6 +100,81 @@ type Ticket struct {
 
 	// Comment is POST only and required
 	Comment TicketComment `json:"comment,omitempty"`
+	Slas    struct {
+		PolicyMetrics []interface{} `json:"policy_metrics,omitempty"`
+	} `json:"slas,omitempty"`
+	MetricEvents struct {
+		PeriodicUpdateTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id,omitempty"`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+			Status     struct {
+				Calendar int `json:"calendar,omitempty"`
+				Business int `json:"business,omitempty"`
+			} `json:"status,omitempty"`
+		} `json:"periodic_update_time,omitempty"`
+		RequesterWaitTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id,omitempty"`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+		} `json:"requester_wait_time,omitempty"`
+		ResolutionTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id",omitempty`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+		} `json:"resolution_time,omitempty"`
+		PausableUpdateTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id,omitempty"`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+			Status     struct {
+				Calendar int `json:"calendar,omitempty"`
+				Business int `json:"business,omitempty"`
+			} `json:"status,omitempty"`
+		} `json:"pausable_update_time,omitempty"`
+		AgentWorkTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id,omitempty"`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+		} `json:"agent_work_time,omitempty"`
+		ReplyTime []struct {
+			ID         int64     `json:"id,omitempty"`
+			TicketID   int       `json:"ticket_id,omitempty"`
+			Metric     string    `json:"metric,omitempty"`
+			InstanceID int       `json:"instance_id,omitempty"`
+			Type       string    `json:"type,omitempty"`
+			Time       time.Time `json:"time,omitempty"`
+			SLA        struct {
+				Target        int  `json:"target,omitempty"`
+				BusinessHours bool `json:"business_hours,omitempty"`
+				Policy        struct {
+					ID          int         `json:"id,omitempty"`
+					Title       string      `json:"title,omitempty"`
+					Description interface{} `json:"description,omitempty"`
+				} `json:"policy,omitempty"`
+			} `json:"sla,omitempty"`
+			Deleted bool `json:"deleted,omitempty"`
+			Status  struct {
+				Calendar int `json:"calendar,omitempty"`
+				Business int `json:"business,omitempty"`
+			} `json:"status,omitempty"`
+		} `json:"reply_time,omitempty"`
+	} `json:"metric_events,omitempty"`
 
 	// TODO: TicketAudit (POST only) #126
 }
@@ -120,6 +195,9 @@ type TicketListOptions struct {
 	// Cursor determines "page" in an incremental export
 	// https://developer.zendesk.com/rest_api/docs/support/incremental_export#cursor-based-incremental-exports
 	Cursor string `url:"cursor,omitempty"`
+
+	// Sideload includes additional endpoints
+	Sideload string `url:"include,omitempty"`
 }
 
 // TicketAPI an interface containing all ticket related methods
