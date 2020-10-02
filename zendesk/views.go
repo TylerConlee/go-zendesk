@@ -81,6 +81,27 @@ func (z *Client) GetViews(ctx context.Context) ([]View, Page, error) {
 	return data.Views, data.Page, nil
 }
 
+func (z *Client) GetActiveViews(ctx context.Context) ([]View, Page, error) {
+	var data struct {
+		Views []View `json:"views"`
+		Page
+	}
+	u, err := addOptions("/views/active.json", nil)
+	if err != nil {
+		return nil, Page{}, err
+	}
+	body, err := z.get(ctx, u)
+	if err != nil {
+		return nil, Page{}, err
+	}
+
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, Page{}, err
+	}
+	return data.Views, data.Page, nil
+}
+
 func (z *Client) GetView(ctx context.Context, viewID int64) (View, error) {
 	var result struct {
 		View View `json:"view"`
