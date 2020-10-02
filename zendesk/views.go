@@ -54,12 +54,18 @@ type View struct {
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }
 
+// ViewAPI is an interface containing all view related methods
 type ViewAPI interface {
 	GetViews(ctx context.Context) ([]View, Page, error)
-	GetView(ctx context.Context, id int64) (View, error)
+	GetActiveViews(ctx context.Context) ([]View, Page, error)
+	GetView(ctx context.Context, viewID int64) (View, error)
 	CreateView(ctx context.Context, view View) (View, error)
+	UpdateView(ctx context.Context, viewID int64, view View) (View, error)
 }
 
+// GetViews gets a list of all of the current views (active & deactivated)
+// Endpoint: GET /api/v2/views.json
+// https://developer.zendesk.com/rest_api/docs/support/views#list-views
 func (z *Client) GetViews(ctx context.Context) ([]View, Page, error) {
 	var data struct {
 		Views []View `json:"views"`
@@ -81,6 +87,9 @@ func (z *Client) GetViews(ctx context.Context) ([]View, Page, error) {
 	return data.Views, data.Page, nil
 }
 
+// GetActiveViews gets a list of all of the current active views
+// Endpoint: GET /api/v2/views/active.json
+// https://developer.zendesk.com/rest_api/docs/support/views#list-active-views
 func (z *Client) GetActiveViews(ctx context.Context) ([]View, Page, error) {
 	var data struct {
 		Views []View `json:"views"`
@@ -102,6 +111,9 @@ func (z *Client) GetActiveViews(ctx context.Context) ([]View, Page, error) {
 	return data.Views, data.Page, nil
 }
 
+// GetView gets the details of a specified view
+// Endpoint: GET /api/v2/views/{ID}.json
+// https://developer.zendesk.com/rest_api/docs/support/views#show-view
 func (z *Client) GetView(ctx context.Context, viewID int64) (View, error) {
 	var result struct {
 		View View `json:"view"`
@@ -126,6 +138,9 @@ func (z *Client) GetView(ctx context.Context, viewID int64) (View, error) {
 	return result.View, nil
 }
 
+// CreateView takes a View instance and saves it as a new view in Zendesk
+// Endpoint: POST /api/v2/views.json
+// https://developer.zendesk.com/rest_api/docs/support/views#create-view
 func (z *Client) CreateView(ctx context.Context, view View) (View, error) {
 	var data, result struct {
 		View View `json:"View"`
@@ -143,6 +158,9 @@ func (z *Client) CreateView(ctx context.Context, view View) (View, error) {
 	return result.View, nil
 }
 
+// UpdateView takes a View instance and saves it as a new view in Zendesk
+// Endpoint: PUT /api/v2/views/{ID}.json
+// https://developer.zendesk.com/rest_api/docs/support/views#update-view
 func (z *Client) UpdateView(ctx context.Context, viewID int64, view View) (View, error) {
 	var data, result struct {
 		View View `json:"View"`
