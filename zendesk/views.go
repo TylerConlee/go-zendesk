@@ -132,7 +132,27 @@ func (z *Client) CreateView(ctx context.Context, view View) (View, error) {
 	}
 	data.View = view
 
-	body, err := z.post(ctx, "views.json", data)
+	body, err := z.post(ctx, "/views.json", data)
+	if err != nil {
+		return View{}, err
+	}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return View{}, err
+	}
+	return result.View, nil
+}
+
+func (z *Client) UpdateView(ctx context.Context, viewID int64, view View) (View, error) {
+	var data, result struct {
+		View View `json:"View"`
+	}
+	data.View = view
+	var builder includeBuilder
+
+	u, err := builder.path(fmt.Sprintf("/views/%d.json", viewID))
+
+	body, err := z.put(ctx, u, data)
 	if err != nil {
 		return View{}, err
 	}
