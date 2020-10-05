@@ -11,29 +11,29 @@ import (
 // observed from.
 //  https://developer.zendesk.com/rest_api/docs/support/views#json-format
 type View struct {
-	ID          int64  `json:"id,omitempty"`
+	ID          int    `json:"id,omitempty"`
 	Title       string `json:"title,omitempty"`
 	Active      bool   `json:"active,omitempty"`
 	Restriction struct {
 		Type string `json:"type,omitempty"`
-		ID   int64  `json:"id"`
+		ID   int    `json:"id"`
 	} `json:"restriction,omitempty"`
-	Position  int64 `json:"position,omitempty"`
+	Position  int `json:"position,omitempty"`
 	Execution struct {
 		GroupBy    string `json:"group_by,omitempty"`
 		SortBy     string `json:"sort_by,omitempty"`
 		GroupOrder string `json:"group_order,omitempty"`
 		SortOrder  string `json:"sort_order,omitempty"`
 		Columns    []struct {
-			ID    int64  `json:"id,omitempty"`
+			ID    int    `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
 		} `json:"columns,omitempty"`
 		Group struct {
-			ID    int64  `json:"id,omitempty"`
+			ID    int    `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
 		} `json:"group,omitempty"`
 		Sort struct {
-			ID    int64  `json:",omitempty"`
+			ID    int    `json:",omitempty"`
 			Title string `json:",omitempty"`
 		} `json:",omitempty"`
 	} `json:"execution,omitempty"`
@@ -58,9 +58,9 @@ type View struct {
 type ViewAPI interface {
 	GetViews(ctx context.Context) ([]View, Page, error)
 	GetActiveViews(ctx context.Context) ([]View, Page, error)
-	GetView(ctx context.Context, viewID int64) (View, error)
+	GetView(ctx context.Context, viewID int) (View, error)
 	CreateView(ctx context.Context, view View) (View, error)
-	UpdateView(ctx context.Context, viewID int64, view View) (View, error)
+	UpdateView(ctx context.Context, viewID int, view View) (View, error)
 }
 
 // GetViews gets a list of all of the current views (active & deactivated)
