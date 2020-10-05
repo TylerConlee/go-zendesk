@@ -29,12 +29,14 @@ type View struct {
 			Title string `json:"title,omitempty"`
 		} `json:"columns,omitempty"`
 		Group struct {
-			ID    int64  `json:"id,omitempty"`
+			ID    string `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
+			Order string `json:"order,omitempty"`
 		} `json:"group,omitempty"`
 		Sort struct {
-			ID    int64  `json:"id,omitempty"`
+			ID    string `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
+			Order string `json:"order,omitempty"`
 		} `json:"sort,omitempty"`
 	} `json:"execution,omitempty"`
 	Conditions struct {
