@@ -29,15 +29,15 @@ type View struct {
 			Title string `json:"-"`
 		} `json:"-"`
 		Group struct {
-			ID    string `json:"id,omitempty"`
-			Title string `json:"title,omitempty"`
-			Order string `json:"order,omitempty"`
-		} `json:"group,omitempty"`
+			ID    string `json:"-"`
+			Title string `json:"-"`
+			Order string `json:"-"`
+		} `json:"-"`
 		Sort struct {
-			ID    string `json:"id,omitempty"`
-			Title string `json:"title,omitempty"`
-			Order string `json:"order,omitempty"`
-		} `json:"sort,omitempty"`
+			ID    string `json:"-"`
+			Title string `json:"-"`
+			Order string `json:"-"`
+		} `-"`
 	} `json:"execution,omitempty"`
 	Conditions struct {
 		All []struct {
