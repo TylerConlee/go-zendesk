@@ -11,29 +11,29 @@ import (
 // observed from.
 //  https://developer.zendesk.com/rest_api/docs/support/views#json-format
 type View struct {
-	ID          int    `json:"id,omitempty"`
+	ID          int64  `json:"id,string,omitempty"`
 	Title       string `json:"title,omitempty"`
 	Active      bool   `json:"active,omitempty"`
 	Restriction struct {
 		Type string `json:"type,omitempty"`
-		ID   int    `json:"id"`
+		ID   int64  `json:"id"`
 	} `json:"restriction,omitempty"`
-	Position  int `json:"position,omitempty"`
+	Position  int64 `json:"position,omitempty"`
 	Execution struct {
 		GroupBy    string `json:"group_by,omitempty"`
 		SortBy     string `json:"sort_by,omitempty"`
 		GroupOrder string `json:"group_order,omitempty"`
 		SortOrder  string `json:"sort_order,omitempty"`
 		Columns    []struct {
-			ID    int    `json:"id,omitempty"`
+			ID    int64  `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
 		} `json:"columns,omitempty"`
 		Group struct {
-			ID    int    `json:"id,omitempty"`
+			ID    int64  `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
 		} `json:"group,omitempty"`
 		Sort struct {
-			ID    int    `json:",omitempty"`
+			ID    int64  `json:",omitempty"`
 			Title string `json:",omitempty"`
 		} `json:",omitempty"`
 	} `json:"execution,omitempty"`
