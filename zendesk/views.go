@@ -25,9 +25,9 @@ type View struct {
 		GroupOrder string `json:"group_order,omitempty"`
 		SortOrder  string `json:"sort_order,omitempty"`
 		Columns    []struct {
-			ID    string `json:"id,string,omitempty"`
-			Title string `json:"title,omitempty"`
-		} `json:"columns,omitempty"`
+			ID    string `json:"-"`
+			Title string `json:"-"`
+		} `json:"-"`
 		Group struct {
 			ID    string `json:"id,omitempty"`
 			Title string `json:"title,omitempty"`
