@@ -11,7 +11,7 @@ import (
 // observed from.
 //  https://developer.zendesk.com/rest_api/docs/support/views#json-format
 type View struct {
-	ID          int64  `json:"id,string,omitempty"`
+	ID          int64  `json:"id,omitempty"`
 	Title       string `json:"title,omitempty"`
 	Active      bool   `json:"active,omitempty"`
 	Restriction struct {
@@ -33,9 +33,9 @@ type View struct {
 			Title string `json:"title,omitempty"`
 		} `json:"group,omitempty"`
 		Sort struct {
-			ID    int64  `json:",omitempty"`
-			Title string `json:",omitempty"`
-		} `json:",omitempty"`
+			ID    int64  `json:"id,omitempty"`
+			Title string `json:"title,omitempty"`
+		} `json:"sort,omitempty"`
 	} `json:"execution,omitempty"`
 	Conditions struct {
 		All []struct {
