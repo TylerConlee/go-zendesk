@@ -56,10 +56,20 @@ type View struct {
 	UpdatedAt   time.Time `json:"updated_at,omitempty"`
 }
 
+// ViewCount represents the return from the `count` endpoints
+type ViewCount struct {
+	ViewID int64  `json:"view_id,omitempty"`
+	URL    string `json:"url,omitempty"`
+	Value  int64  `json:"value,omitempty"`
+	Pretty string `json:"pretty,omitempty"`
+	Fresh  bool   `json:"fresh,omitempty"`
+}
+
 // ViewAPI is an interface containing all view related methods
 type ViewAPI interface {
 	GetViews(ctx context.Context) ([]View, Page, error)
 	GetActiveViews(ctx context.Context) ([]View, Page, error)
+	GetViewCount(ctx context.Context, viewID int) (ViewCount, error)
 	GetView(ctx context.Context, viewID int) (View, error)
 	CreateView(ctx context.Context, view View) (View, error)
 	UpdateView(ctx context.Context, viewID int, view View) (View, error)
@@ -111,6 +121,33 @@ func (z *Client) GetActiveViews(ctx context.Context) ([]View, Page, error) {
 		return nil, Page{}, err
 	}
 	return data.Views, data.Page, nil
+}
+
+// GetViewCount gets the count of tickets in a given view.
+// Endpoint: GET /api/v2/views/{id}/count.json
+// https://developer.zendesk.com/rest_api/docs/support/views#get-view-count
+func (z *Client) GetViewCount(ctx context.Context, viewID int64) (ViewCount, error) {
+	var result struct {
+		ViewCount ViewCount `json:"view_count"`
+	}
+
+	var builder includeBuilder
+
+	u, err := builder.path(fmt.Sprintf("/views/%d/count.json", viewID))
+
+	if err != nil {
+		return ViewCount{}, err
+	}
+
+	body, err := z.get(ctx, u)
+	if err != nil {
+		return ViewCount{}, err
+	}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return ViewCount{}, err
+	}
+	return result.ViewCount, nil
 }
 
 // GetView gets the details of a specified view
